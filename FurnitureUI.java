@@ -1,7 +1,9 @@
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.FileWriter;
+import java.time.LocalDateTime;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
 public class FurnitureUI extends JFrame {
 
@@ -20,22 +22,22 @@ public class FurnitureUI extends JFrame {
         }
     }
 
-public FurnitureUI() {
-    setTitle("Furniture");
-    setSize(1200, 1600);
-    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    setLocationRelativeTo(null);
+    public FurnitureUI() {
+        setTitle("Furniture");
+        setSize(1200, 1600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
 
-    // Navbar fixe
-    JPanel navbar = buildNavbar();
-    add(navbar, BorderLayout.NORTH);
+        // Navbar fixe
+        JPanel navbar = buildNavbar();
+        add(navbar, BorderLayout.NORTH);
 
-    // Contenu scrollable
-    JScrollPane scrollPane = new JScrollPane(buildMainPanelWithoutNavbar());
-    scrollPane.getVerticalScrollBar().setUnitIncrement(20);
-    scrollPane.setBorder(null);
-    add(scrollPane, BorderLayout.CENTER);
-}
+        // Contenu scrollable
+        JScrollPane scrollPane = new JScrollPane(buildMainPanelWithoutNavbar());
+        scrollPane.getVerticalScrollBar().setUnitIncrement(20);
+        scrollPane.setBorder(null);
+        add(scrollPane, BorderLayout.CENTER);
+    }
 
 
     private ImageIcon loadImage(String fileName, int w, int h) {
@@ -54,22 +56,22 @@ public FurnitureUI() {
         }
     }
 
-private JPanel buildMainPanelWithoutNavbar() {
-    JPanel main = new JPanel();
-    main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-    main.setBackground(Color.WHITE);
+    private JPanel buildMainPanelWithoutNavbar() {
+        JPanel main = new JPanel();
+        main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
+        main.setBackground(Color.WHITE);
 
-    // on commence par le hero section
-    main.add(buildHeroSection());
-    main.add(buildInspirationSection());
-    main.add(buildBrowseRangeSection());
-    main.add(buildProductsSection());
-    main.add(buildHowItWorksSection());
-    main.add(buildMailingListSection());
-    main.add(buildFooterSection());
+        // on commence par le hero section
+        main.add(buildHeroSection());
+        main.add(buildInspirationSection());
+        main.add(buildBrowseRangeSection());
+        main.add(buildProductsSection());
+        main.add(buildHowItWorksSection());
+        main.add(buildMailingListSection());
+        main.add(buildFooterSection());
 
-    return main;
-}
+        return main;
+    }
 
     // -------------------- NAVBAR --------------------
     private JPanel buildNavbar() {
@@ -537,66 +539,105 @@ private JPanel buildMainPanelWithoutNavbar() {
     }
 
     // -------------------- CART --------------------
- private void openCartWindow() {
-    JFrame cartFrame = new JFrame("Your Cart");
-    cartFrame.setSize(450, 550);
-    cartFrame.setLocationRelativeTo(this);
+    private void openCartWindow() {
+        JFrame cartFrame = new JFrame("Your Cart");
+        cartFrame.setSize(450, 550);
+        cartFrame.setLocationRelativeTo(this);
 
-    JPanel panel = new JPanel();
-    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-    panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-    panel.setBackground(Color.WHITE);
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        panel.setBackground(Color.WHITE);
 
-    int total = 0;
-    for (int i = 0; i < cart.size(); i++) {
-        Product p = cart.get(i);
+        int total = 0;
+        for (int i = 0; i < cart.size(); i++) {
+            Product p = cart.get(i);
 
-        JPanel itemPanel = new JPanel(new BorderLayout());
-        itemPanel.setBackground(Color.decode("#F5F5F5"));
-        itemPanel.setBorder(BorderFactory.createLineBorder(Color.decode("#CCCCCC"), 1));
-        itemPanel.setMaximumSize(new Dimension(400, 80));
-        itemPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            JPanel itemPanel = new JPanel(new BorderLayout());
+            itemPanel.setBackground(Color.decode("#F5F5F5"));
+            itemPanel.setBorder(BorderFactory.createLineBorder(Color.decode("#CCCCCC"), 1));
+            itemPanel.setMaximumSize(new Dimension(400, 80));
+            itemPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel nameLabel = new JLabel(p.name + " - " + p.price);
-        nameLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        nameLabel.setBorder(new EmptyBorder(5, 10, 5, 10));
+            JLabel nameLabel = new JLabel(p.name + " - " + p.price);
+            nameLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            nameLabel.setBorder(new EmptyBorder(5, 10, 5, 10));
 
-        JButton removeBtn = new JButton("Remove");
-        removeBtn.setBackground(Color.decode("#E74C3C"));
-        removeBtn.setForeground(Color.WHITE);
-        removeBtn.setFocusPainted(false);
-        removeBtn.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        int index = i;
-        removeBtn.addActionListener(e -> {
-            cart.remove(index);
+            JButton removeBtn = new JButton("Remove");
+            removeBtn.setBackground(Color.decode("#E74C3C"));
+            removeBtn.setForeground(Color.WHITE);
+            removeBtn.setFocusPainted(false);
+            removeBtn.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+            int index = i;
+            removeBtn.addActionListener(e -> {
+                cart.remove(index);
+                cartFrame.dispose();
+                openCartWindow();
+            });
+
+            itemPanel.add(nameLabel, BorderLayout.CENTER);
+            itemPanel.add(removeBtn, BorderLayout.EAST);
+
+            panel.add(itemPanel);
+            panel.add(Box.createVerticalStrut(10));
+
+            String priceNum = p.price.replaceAll("[^0-9]", "");
+            total += Integer.parseInt(priceNum);
+        }
+
+
+        JLabel totalLbl = new JLabel("Total: " + total + " DA");
+        totalLbl.setFont(new Font("SansSerif", Font.BOLD, 18));
+        totalLbl.setForeground(Color.decode("#1E3250"));
+        totalLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
+        totalLbl.setBorder(new EmptyBorder(10,0,10,0));
+
+        panel.add(totalLbl);
+
+        // --- Checkout button (Session 7: save order to file) ---
+        JButton checkoutBtn = new JButton("Checkout");
+        checkoutBtn.setBackground(new Color(30,50,80));
+        checkoutBtn.setForeground(Color.WHITE);
+        checkoutBtn.setFocusPainted(false);
+        checkoutBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        int finalTotal = total; // capture current total
+        checkoutBtn.addActionListener(ev -> {
+            if (cart.isEmpty()) {
+                JOptionPane.showMessageDialog(cartFrame, "Your cart is empty.");
+                return;
+            }
+            // save order to file
+            saveOrderToFile(finalTotal);
+            JOptionPane.showMessageDialog(cartFrame, "Order placed successfully! Thank you ♥");
+            cart.clear();
             cartFrame.dispose();
-            openCartWindow();
         });
 
-        itemPanel.add(nameLabel, BorderLayout.CENTER);
-        itemPanel.add(removeBtn, BorderLayout.EAST);
-
-        panel.add(itemPanel);
         panel.add(Box.createVerticalStrut(10));
+        panel.add(checkoutBtn);
 
-        String priceNum = p.price.replaceAll("[^0-9]", "");
-        total += Integer.parseInt(priceNum);
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(null);
+        cartFrame.add(scrollPane);
+        cartFrame.setVisible(true);
     }
 
-    JLabel totalLbl = new JLabel("Total: " + total + " DA");
-    totalLbl.setFont(new Font("SansSerif", Font.BOLD, 18));
-    totalLbl.setForeground(Color.decode("#1E3250"));
-    totalLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-    totalLbl.setBorder(new EmptyBorder(10,0,10,0));
-
-    panel.add(totalLbl);
-
-    JScrollPane scrollPane = new JScrollPane(panel);
-    scrollPane.setBorder(null);
-    cartFrame.add(scrollPane);
-    cartFrame.setVisible(true);
-}
-
+    // -------------------- Session 7: Save order to file --------------------
+    private void saveOrderToFile(long total) {
+        try (FileWriter fw = new FileWriter("orders.txt", true)) {
+            fw.write("----- NEW ORDER -----\n");
+            fw.write("Date: " + LocalDateTime.now() + "\n");
+            for (Product p : cart) {
+                fw.write(p.name + " - " + p.price + "\n");
+            }
+            fw.write("Total: " + total + " DA\n");
+            fw.write("---------------------\n\n");
+            fw.flush();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error saving order: " + e.getMessage());
+        }
+    }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new FurnitureUI().setVisible(true));
