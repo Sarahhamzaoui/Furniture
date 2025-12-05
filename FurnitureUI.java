@@ -11,6 +11,7 @@ public class FurnitureUI extends JFrame {
     private JPanel productsSection;
     private JPanel howItWorksSection;
 
+    // ---------------- Product model ----------------
     private static class Product {
         String name;
         String price;
@@ -22,11 +23,22 @@ public class FurnitureUI extends JFrame {
         }
     }
 
+    // ---------------- Styling fields (Session 8 minimal requested) ----------------
+    private final Font uiFont = new Font("Segoe UI", Font.PLAIN, 15);
+    private final Font uiFontBold = new Font("Segoe UI", Font.BOLD, 17);
+    private final Color primaryBlue = new Color(30, 50, 80); // dark blue
+    private final Color primaryBlueHover = new Color(18, 35, 65);
+
     public FurnitureUI() {
         setTitle("Furniture");
         setSize(1200, 1600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+
+        // Apply global font
+        UIManager.put("Label.font", uiFont);
+        UIManager.put("Button.font", uiFont);
+        UIManager.put("TextField.font", uiFont);
 
         // Navbar fixe
         JPanel navbar = buildNavbar();
@@ -39,23 +51,53 @@ public class FurnitureUI extends JFrame {
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    // -------------------- helper: style a button --------------------
+    private void styleButton(JButton btn) {
+        btn.setBackground(primaryBlue);
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setFont(uiFont);
+        btn.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
+        btn.setOpaque(true);
+        // Rounded effect with empty border is fine; for true rounded you'd need custom painting.
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btn.setBackground(primaryBlueHover);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btn.setBackground(primaryBlue);
+            }
+        });
+    }
 
+    // -------------------- IMAGE LOADER --------------------
     private ImageIcon loadImage(String fileName, int w, int h) {
         try {
             java.net.URL imgURL = getClass().getResource("/images/" + fileName);
             if (imgURL == null) {
-                System.out.println("Image not found: " + fileName);
-                return new ImageIcon(new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB));
+                // placeholder if image missing
+                BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+                Graphics2D g2 = bi.createGraphics();
+                g2.setPaint(Color.LIGHT_GRAY);
+                g2.fillRect(0,0,w,h);
+                g2.dispose();
+                return new ImageIcon(bi);
             }
             ImageIcon icon = new ImageIcon(imgURL);
             Image scaled = icon.getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
             return new ImageIcon(scaled);
         } catch (Exception e) {
-            System.out.println("Error loading image: " + fileName);
-            return new ImageIcon(new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB));
+            BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2 = bi.createGraphics();
+            g2.setPaint(Color.LIGHT_GRAY);
+            g2.fillRect(0,0,w,h);
+            g2.dispose();
+            return new ImageIcon(bi);
         }
     }
 
+    // -------------------- MAIN PANEL BUILD --------------------
     private JPanel buildMainPanelWithoutNavbar() {
         JPanel main = new JPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
@@ -63,11 +105,17 @@ public class FurnitureUI extends JFrame {
 
         // on commence par le hero section
         main.add(buildHeroSection());
+        main.add(Box.createVerticalStrut(20));
         main.add(buildInspirationSection());
+        main.add(Box.createVerticalStrut(20));
         main.add(buildBrowseRangeSection());
+        main.add(Box.createVerticalStrut(20));
         main.add(buildProductsSection());
+        main.add(Box.createVerticalStrut(20));
         main.add(buildHowItWorksSection());
+        main.add(Box.createVerticalStrut(20));
         main.add(buildMailingListSection());
+        main.add(Box.createVerticalStrut(20));
         main.add(buildFooterSection());
 
         return main;
@@ -81,7 +129,7 @@ public class FurnitureUI extends JFrame {
         navbar.setBorder(new EmptyBorder(10, 40, 10, 40));
 
         JLabel brand = new JLabel("Furniture");
-        brand.setFont(new Font("SansSerif", Font.BOLD, 24));
+        brand.setFont(uiFontBold);
         brand.setForeground(new Color(30, 50, 80));
 
         JPanel menu = new JPanel(new FlowLayout(FlowLayout.RIGHT, 30, 0));
@@ -89,10 +137,11 @@ public class FurnitureUI extends JFrame {
         String[] items = {"Home",  "Products", "Services","Contact"};
         for (String item : items) {
             JLabel lbl = new JLabel(item);
-            lbl.setFont(new Font("SansSerif", Font.PLAIN, 16));
+            lbl.setFont(uiFont);
             lbl.setForeground(new Color(30, 50, 80));
             lbl.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
+            // Improved listener: use scrollTo when possible and call contact form
             lbl.addMouseListener(new java.awt.event.MouseAdapter() {
                 public void mouseClicked(java.awt.event.MouseEvent e) {
                     switch(item){
@@ -100,15 +149,21 @@ public class FurnitureUI extends JFrame {
                             scrollTo(0);
                             break;
                         case "Products":
-                            scrollTo(productsSection.getY());
+                            if (productsSection != null) scrollTo(productsSection.getY());
                             break;
                         case "Services":
-                            scrollTo(howItWorksSection.getY());
+                            if (howItWorksSection != null) scrollTo(howItWorksSection.getY());
                             break;
                         case "Contact":
                             openContactForm();
                             break;
                     }
+                }
+                public void mouseEntered(java.awt.event.MouseEvent e) {
+                    lbl.setForeground(primaryBlueHover);
+                }
+                public void mouseExited(java.awt.event.MouseEvent e) {
+                    lbl.setForeground(new Color(30, 50, 80));
                 }
             });
 
@@ -116,8 +171,7 @@ public class FurnitureUI extends JFrame {
         }
 
         JButton cartBtn = new JButton("Cart");
-        cartBtn.setBackground(new Color(30,50,80));
-        cartBtn.setForeground(Color.WHITE);
+        styleButton(cartBtn);
         cartBtn.setFocusPainted(false);
         cartBtn.addActionListener(e -> openCartWindow());
 
@@ -130,8 +184,19 @@ public class FurnitureUI extends JFrame {
     }
 
     private void scrollTo(int y){
-        JScrollBar bar = ((JScrollPane)getContentPane().getComponent(0)).getVerticalScrollBar();
-        bar.setValue(y);
+        // find the scroll pane in the content and set scrollbar value
+        for (Component c : getContentPane().getComponents()) {
+            if (c instanceof JScrollPane) {
+                JScrollBar bar = ((JScrollPane)c).getVerticalScrollBar();
+                bar.setValue(y);
+                return;
+            }
+        }
+        // fallback (old approach)
+        try {
+            JScrollPane sp = (JScrollPane)getContentPane().getComponent(0);
+            sp.getVerticalScrollBar().setValue(y);
+        } catch (Exception ignored) {}
     }
 
     // -------------------- HERO --------------------
@@ -162,13 +227,13 @@ public class FurnitureUI extends JFrame {
         subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JButton shopBtn = new JButton("Shop Now");
-        shopBtn.setBackground(new Color(30, 50, 80));
-        shopBtn.setForeground(Color.WHITE);
-        shopBtn.setFont(new Font("SansSerif", Font.BOLD, 16));
-        shopBtn.setFocusPainted(false);
+        styleButton(shopBtn);
+        shopBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
         shopBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         shopBtn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        shopBtn.addActionListener(e -> scrollTo(productsSection.getY()));
+        shopBtn.addActionListener(e -> {
+            if (productsSection != null) scrollTo(productsSection.getY());
+        });
 
         overlay.add(title);
         overlay.add(Box.createVerticalStrut(15));
@@ -180,7 +245,7 @@ public class FurnitureUI extends JFrame {
         return hero;
     }
 
-    // -------------------- INSPIRATION COLLECTION --------------------
+    // INSPIRATION COLLECTION
     private JPanel buildInspirationSection() {
         JPanel section = new JPanel();
         section.setLayout(new BoxLayout(section, BoxLayout.Y_AXIS));
@@ -237,7 +302,7 @@ public class FurnitureUI extends JFrame {
         return card;
     }
 
-    // -------------------- BROWSE THE RANGE --------------------
+    //  BROWSE THE RANGE 
     private JPanel buildBrowseRangeSection() {
         JPanel section = new JPanel();
         section.setLayout(new BoxLayout(section, BoxLayout.Y_AXIS));
@@ -293,7 +358,7 @@ public class FurnitureUI extends JFrame {
         return card;
     }
 
-    // -------------------- OUR PRODUCTS --------------------
+    //  OUR PRODUCTS
     private JPanel buildProductsSection() {
         JPanel section = new JPanel();
         section.setLayout(new BoxLayout(section, BoxLayout.Y_AXIS));
@@ -318,10 +383,9 @@ public class FurnitureUI extends JFrame {
         grid.add(styledProductBox("bedroom.jpg", "Cozy Bedroom Set", "320000 DA"));
 
         JButton viewAll = new JButton("VIEW ALL");
+        styleButton(viewAll);
         viewAll.setAlignmentX(Component.CENTER_ALIGNMENT);
-        viewAll.setBackground(new Color(30, 50, 80));
-        viewAll.setForeground(Color.WHITE);
-        viewAll.setFont(new Font("SansSerif", Font.BOLD, 14));
+        viewAll.setFont(new Font("Segoe UI", Font.BOLD, 14));
         viewAll.setFocusPainted(false);
         viewAll.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
@@ -363,9 +427,7 @@ public class FurnitureUI extends JFrame {
         lblPrice.setForeground(new Color(30, 50, 80));
 
         JButton addBtn = new JButton("Add to Cart");
-        addBtn.setBackground(new Color(30,50,80));
-        addBtn.setForeground(Color.WHITE);
-        addBtn.setFocusPainted(false);
+        styleButton(addBtn);
         addBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         addBtn.addActionListener(ev -> {
             cart.add(new Product(name, price, imgName));
@@ -381,7 +443,7 @@ public class FurnitureUI extends JFrame {
         return box;
     }
 
-    // -------------------- HOW IT WORKS --------------------
+    // HOW IT WORKS
     private JPanel buildHowItWorksSection() {
         JPanel section = new JPanel();
         section.setLayout(new BoxLayout(section, BoxLayout.Y_AXIS));
@@ -442,8 +504,7 @@ public class FurnitureUI extends JFrame {
 
         return box;
     }
-
-    // -------------------- JOIN OUR MAILING LIST --------------------
+    // MAILING LIST
     private JPanel buildMailingListSection() {
         JPanel section = new JPanel();
         section.setLayout(new BoxLayout(section, BoxLayout.Y_AXIS));
@@ -461,16 +522,22 @@ public class FurnitureUI extends JFrame {
         JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         inputPanel.setBackground(new Color(237, 244, 252));
         JTextField emailField = new JTextField(30);
-        emailField.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        emailField.setFont(uiFont);
         JButton submitBtn = new JButton("Submit");
-        submitBtn.setBackground(new Color(30, 50, 80));
-        submitBtn.setForeground(Color.WHITE);
-        submitBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
-        submitBtn.setFocusPainted(false);
-        submitBtn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        styleButton(submitBtn);
 
         inputPanel.add(emailField);
         inputPanel.add(submitBtn);
+
+        submitBtn.addActionListener(e -> {
+            String em = emailField.getText().trim();
+            if (em.isEmpty() || !em.matches("^.+@.+\\..+$")) {
+                JOptionPane.showMessageDialog(this, "Please enter a valid email.");
+            } else {
+                JOptionPane.showMessageDialog(this, "Thanks for subscribing!");
+                emailField.setText("");
+            }
+        });
 
         section.add(title);
         section.add(Box.createVerticalStrut(15));
@@ -481,7 +548,7 @@ public class FurnitureUI extends JFrame {
         return section;
     }
 
-    // -------------------- FOOTER --------------------
+    // FOOTER
     private JPanel buildFooterSection() {
         JPanel footer = new JPanel();
         footer.setLayout(new BoxLayout(footer, BoxLayout.Y_AXIS));
@@ -506,39 +573,77 @@ public class FurnitureUI extends JFrame {
         return footer;
     }
 
-    // -------------------- CONTACT FORM --------------------
+    //  CONTACT FORM
     private void openContactForm(){
         JFrame contact = new JFrame("Contact Us");
-        contact.setSize(400,300);
+        contact.setSize(420,360);
         contact.setLocationRelativeTo(this);
 
-        JPanel panel = new JPanel(new GridLayout(4,2,10,10));
-        panel.setBorder(new EmptyBorder(20,20,20,20));
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(new EmptyBorder(18, 18, 18, 18));
+        panel.setBackground(Color.WHITE);
+
+        JLabel title = new JLabel("📨 Contact Us");
+        title.setFont(uiFontBold);
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JTextField name = new JTextField();
+        JTextField email = new JTextField();
+        JTextField subject = new JTextField();
+        JTextArea message = new JTextArea(5, 20);
+        message.setLineWrap(true);
+        message.setWrapStyleWord(true);
+
+        name.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+        email.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+        subject.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+        message.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
+
+        panel.add(title);
+        panel.add(Box.createVerticalStrut(12));
 
         panel.add(new JLabel("Name:"));
-        JTextField name = new JTextField();
         panel.add(name);
+        panel.add(Box.createVerticalStrut(8));
 
         panel.add(new JLabel("Email:"));
-        JTextField email = new JTextField();
         panel.add(email);
+        panel.add(Box.createVerticalStrut(8));
+
+        panel.add(new JLabel("Subject:"));
+        panel.add(subject);
+        panel.add(Box.createVerticalStrut(8));
 
         panel.add(new JLabel("Message:"));
-        JTextField msg = new JTextField();
-        panel.add(msg);
+        panel.add(new JScrollPane(message));
+        panel.add(Box.createVerticalStrut(12));
 
-        JButton submit = new JButton("Submit");
-        submit.addActionListener(e -> {
-            JOptionPane.showMessageDialog(contact, "Thank you, "+name.getText()+"!");
+        JButton send = new JButton("Send Message");
+        styleButton(send);
+        send.setAlignmentX(Component.CENTER_ALIGNMENT);
+        send.addActionListener(e -> {
+            if (name.getText().trim().isEmpty() ||
+                email.getText().trim().isEmpty() ||
+                message.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(contact, "Please fill in name, email and message.");
+                return;
+            }
+            if (!email.getText().matches("^.+@.+\\..+$")) {
+                JOptionPane.showMessageDialog(contact, "Please enter a valid email address.");
+                return;
+            }
+            JOptionPane.showMessageDialog(contact, "Thank you, " + name.getText() + "!");
             contact.dispose();
         });
-        panel.add(submit);
+
+        panel.add(send);
 
         contact.add(panel);
         contact.setVisible(true);
     }
 
-    // -------------------- CART --------------------
+    //CART 
     private void openCartWindow() {
         JFrame cartFrame = new JFrame("Your Cart");
         cartFrame.setSize(450, 550);
@@ -560,17 +665,14 @@ public class FurnitureUI extends JFrame {
             itemPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
             JLabel nameLabel = new JLabel(p.name + " - " + p.price);
-            nameLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            nameLabel.setFont(uiFont);
             nameLabel.setBorder(new EmptyBorder(5, 10, 5, 10));
 
             JButton removeBtn = new JButton("Remove");
-            removeBtn.setBackground(Color.decode("#E74C3C"));
-            removeBtn.setForeground(Color.WHITE);
-            removeBtn.setFocusPainted(false);
-            removeBtn.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-            int index = i;
+            styleButton(removeBtn);
+            removeBtn.setBackground(new Color(200, 60, 60)); // red-ish remove
             removeBtn.addActionListener(e -> {
-                cart.remove(index);
+                cart.remove(p);
                 cartFrame.dispose();
                 openCartWindow();
             });
@@ -585,21 +687,17 @@ public class FurnitureUI extends JFrame {
             total += Integer.parseInt(priceNum);
         }
 
-
         JLabel totalLbl = new JLabel("Total: " + total + " DA");
-        totalLbl.setFont(new Font("SansSerif", Font.BOLD, 18));
-        totalLbl.setForeground(Color.decode("#1E3250"));
+        totalLbl.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        totalLbl.setForeground(new Color(30, 50, 80));
         totalLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
         totalLbl.setBorder(new EmptyBorder(10,0,10,0));
 
         panel.add(totalLbl);
 
-        // --- Checkout button (Session 7: save order to file) ---
+        // Checkout button 
         JButton checkoutBtn = new JButton("Checkout");
-        checkoutBtn.setBackground(new Color(30,50,80));
-        checkoutBtn.setForeground(Color.WHITE);
-        checkoutBtn.setFocusPainted(false);
-        checkoutBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        styleButton(checkoutBtn);
 
         int finalTotal = total; // capture current total
         checkoutBtn.addActionListener(ev -> {
@@ -607,11 +705,8 @@ public class FurnitureUI extends JFrame {
                 JOptionPane.showMessageDialog(cartFrame, "Your cart is empty.");
                 return;
             }
-            // save order to file
-            saveOrderToFile(finalTotal);
-            JOptionPane.showMessageDialog(cartFrame, "Order placed successfully! Thank you ♥");
-            cart.clear();
-            cartFrame.dispose();
+            // open prettier checkout form
+            openCheckoutForm(finalTotal, cartFrame);
         });
 
         panel.add(Box.createVerticalStrut(10));
@@ -623,7 +718,100 @@ public class FurnitureUI extends JFrame {
         cartFrame.setVisible(true);
     }
 
-    // -------------------- Session 7: Save order to file --------------------
+    // Session 6: Checkout Form 
+    private void openCheckoutForm(int totalAmount, JFrame parentFrame) {
+
+        JFrame checkout = new JFrame("Checkout");
+        checkout.setSize(420, 480);
+        checkout.setLocationRelativeTo(this);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        panel.setBackground(Color.WHITE);
+
+        JLabel t = new JLabel("Complete your order");
+        t.setFont(uiFontBold);
+        t.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JTextField nameField = new JTextField();
+        JTextField phoneField = new JTextField();
+        JTextField emailField = new JTextField();
+        JTextField addressField = new JTextField();
+
+        nameField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        phoneField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        emailField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        addressField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+
+        panel.add(t);
+        panel.add(Box.createVerticalStrut(12));
+
+        panel.add(new JLabel("Full Name"));
+        panel.add(nameField);
+        panel.add(Box.createVerticalStrut(8));
+
+        panel.add(new JLabel("Phone Number"));
+        panel.add(phoneField);
+        panel.add(Box.createVerticalStrut(8));
+
+        panel.add(new JLabel("Email"));
+        panel.add(emailField);
+        panel.add(Box.createVerticalStrut(8));
+
+        panel.add(new JLabel("Shipping Address"));
+        panel.add(addressField);
+        panel.add(Box.createVerticalStrut(12));
+
+        JLabel totalLabel = new JLabel("Order total: " + totalAmount + " DA");
+        totalLabel.setFont(uiFontBold);
+        totalLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        panel.add(totalLabel);
+        panel.add(Box.createVerticalStrut(12));
+
+        JButton confirmBtn = new JButton("Confirm Order");
+        styleButton(confirmBtn);
+        confirmBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        confirmBtn.addActionListener(e -> {
+
+            if (nameField.getText().trim().isEmpty()
+                    || phoneField.getText().trim().isEmpty()
+                    || emailField.getText().trim().isEmpty()
+                    || addressField.getText().trim().isEmpty()) {
+
+                JOptionPane.showMessageDialog(checkout, "Please fill in all fields.");
+                return;
+            }
+
+            if (!phoneField.getText().matches("[0-9]+")) {
+                JOptionPane.showMessageDialog(checkout, "Phone number must contain digits only.");
+                return;
+            }
+
+            if (!emailField.getText().matches("^.+@.+\\..+$")) {
+                JOptionPane.showMessageDialog(checkout, "Invalid email address.");
+                return;
+            }
+
+            saveOrderToFile(totalAmount);
+
+            JOptionPane.showMessageDialog(checkout,
+                    "Order Confirmed!\nThank you " + nameField.getText() + " ♥");
+
+            cart.clear();
+            checkout.dispose();
+            parentFrame.dispose();
+        });
+
+        panel.add(confirmBtn);
+
+        checkout.add(panel);
+        checkout.setVisible(true);
+    }
+
+    //  Session 7: Save order to file
     private void saveOrderToFile(long total) {
         try (FileWriter fw = new FileWriter("orders.txt", true)) {
             fw.write("----- NEW ORDER -----\n");
@@ -639,6 +827,7 @@ public class FurnitureUI extends JFrame {
         }
     }
 
+    // main
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new FurnitureUI().setVisible(true));
     }
